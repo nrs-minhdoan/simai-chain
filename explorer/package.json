@@ -1,0 +1,14 @@
+{
+  "name": "chain-sim-mono",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "pnpm --filter @chain-sim/explorer dev",
+    "demo": "pnpm --filter @chain-sim/core demo",
+    "build": "pnpm --filter @chain-sim/core build && pnpm --filter @chain-sim/explorer build",
+    "typecheck": "pnpm -r typecheck",
+    "preview": "pnpm --filter @chain-sim/explorer preview"
+  }
+}
