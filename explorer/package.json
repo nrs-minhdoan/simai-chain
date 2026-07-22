@@ -1,14 +1,29 @@
 {
-  "name": "chain-sim-mono",
+  "name": "@simai-chain/explorer",
   "version": "1.0.0",
+  "description": "simai-chain explorer — React + Vite, chạy chain ngay trong trình duyệt",
+  "type": "module",
   "private": true,
   "packageManager": "pnpm@9.15.9",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "dev": "pnpm --filter @chain-sim/explorer dev",
-    "demo": "pnpm --filter @chain-sim/core demo",
-    "build": "pnpm --filter @chain-sim/core build && pnpm --filter @chain-sim/explorer build",
-    "typecheck": "pnpm -r typecheck",
-    "preview": "pnpm --filter @chain-sim/explorer preview"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.14.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.0",
+    "vite": "^6.4.3"
   }
 }

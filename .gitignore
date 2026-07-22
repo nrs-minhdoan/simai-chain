@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output (core/dist, explorer/dist)
+dist/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env / secrets — không dùng ở core/explorer hiện tại, nhưng phòng khi thêm sau
+.env
+.env.*
+!.env.example
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code — settings.local.json là cấu hình cá nhân từng máy, không commit
+.claude/settings.local.json

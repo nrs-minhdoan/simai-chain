@@ -1,5 +1,5 @@
 {
-  "name": "simai-chain",
+  "name": "@simai-chain/core",
   "version": "1.0.0",
   "description": "Blockchain simulator (TypeScript): BFT consensus, deterministic VM, exact BigInt math",
   "type": "module",
@@ -11,7 +11,8 @@
   "scripts": {
     "dev": "tsx demo.ts",
     "start": "tsx demo.ts",
-    "build": "tsc",
+    "demo": "tsx demo.ts",
+    "build": "node build.mjs",
     "start:built": "node dist/demo.js",
     "typecheck": "tsc --noEmit"
   },
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "esbuild": "^0.25.0",
     "tsx": "^4.16.0",
     "typescript": "^5.5.0"
   }

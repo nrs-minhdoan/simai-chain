@@ -1,0 +1,20 @@
+{
+  "name": "simai-chain",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @simai-chain/explorer dev",
+    "dev:all": "pnpm -r --parallel dev",
+    "demo": "pnpm --filter @simai-chain/core demo",
+    "build": "pnpm --filter @simai-chain/core build && pnpm --filter @simai-chain/explorer build",
+    "typecheck": "pnpm -r typecheck",
+    "preview": "pnpm --filter @simai-chain/explorer preview"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  }
+}
