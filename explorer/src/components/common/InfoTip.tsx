@@ -4,9 +4,9 @@ import { createPortal } from "react-dom";
 const POP_WIDTH = 260;
 const VIEWPORT_MARGIN = 12;
 
-/** Icon "?" nhỏ — BẤM để mở/đóng 1 popover giải thích bằng ngôn ngữ đời thường.
+/** Icon "?" nhỏ - BẤM để mở/đóng 1 popover giải thích bằng ngôn ngữ đời thường.
  *  Popover render qua Portal vào <body> với `position: fixed`, toạ độ tính từ
- *  getBoundingClientRect() của nút — nếu không sẽ bị `.panel { overflow: hidden }`
+ *  getBoundingClientRect() của nút - nếu không sẽ bị `.panel { overflow: hidden }`
  *  (và bất kỳ ancestor có overflow nào khác) cắt mất một phần nội dung. */
 export default function InfoTip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function InfoTip({ text }: { text: string }) {
     const closeOnEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    // Cuộn/resize làm toạ độ đã tính bị lệch — đóng lại cho an toàn thay vì hiện sai chỗ.
+    // Cuộn/resize làm toạ độ đã tính bị lệch - đóng lại cho an toàn thay vì hiện sai chỗ.
     document.addEventListener("mousedown", closeIfOutside);
     document.addEventListener("keydown", closeOnEscape);
     window.addEventListener("scroll", closeIfOutside, true);

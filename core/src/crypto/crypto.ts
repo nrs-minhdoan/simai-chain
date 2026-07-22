@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// crypto.ts — Lớp mật mã. Toàn bộ "sức mạnh bảo mật" nằm ở đây, KHÔNG ở việc
+// crypto.ts - Lớp mật mã. Toàn bộ "sức mạnh bảo mật" nằm ở đây, KHÔNG ở việc
 // giấu code (nguyên lý Kerckhoffs). Đọc file này cũng vô dụng nếu thiếu khoá
 // riêng và nếu SHA-256/secp256k1 chưa bị phá.
 // ---------------------------------------------------------------------------
@@ -15,7 +15,7 @@ export const keccak = (bytes: Uint8Array): Uint8Array => keccak_256(bytes);
 export const toHex = (b: Uint8Array): Hex => "0x" + bytesToHex(b);
 export const fromHex = (h: Hex): Uint8Array => hexToBytes(h.replace(/^0x/, ""));
 
-/** Địa chỉ = 20 byte cuối của keccak256(pubkey không nén, bỏ prefix 0x04) — kiểu Ethereum. */
+/** Địa chỉ = 20 byte cuối của keccak256(pubkey không nén, bỏ prefix 0x04) - kiểu Ethereum. */
 export function addressFromPubKey(pubUncompressed: Uint8Array): Hex {
   return toHex(keccak(pubUncompressed.slice(1)).slice(-20));
 }

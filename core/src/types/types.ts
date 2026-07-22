@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// types.ts — Kiểu dùng chung cho toàn dự án.
+// types.ts - Kiểu dùng chung cho toàn dự án.
 // ---------------------------------------------------------------------------
 
 /** Chuỗi hex có tiền tố 0x (địa chỉ, hash, chữ ký...). */
@@ -122,7 +122,7 @@ export interface Validator {
   name?: string;
 }
 
-/** Trạng thái phiếu của một validator trong một vòng — dùng để hiển thị telemetry. */
+/** Trạng thái phiếu của một validator trong một vòng - dùng để hiển thị telemetry. */
 export interface VoteInfo {
   voter: Hex;
   name?: string;

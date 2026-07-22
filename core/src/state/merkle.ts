@@ -1,4 +1,4 @@
-// merkle.ts — Merkle root tất định trên danh sách leaf đã sắp thứ tự.
+// merkle.ts - Merkle root tất định trên danh sách leaf đã sắp thứ tự.
 // Dùng cho txRoot và stateRoot.
 import { hash256, toHex } from "../crypto/crypto";
 import type { Hex } from "../types/types";

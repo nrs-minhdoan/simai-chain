@@ -1,4 +1,4 @@
-// block.ts — Cấu trúc block. Header cam kết txRoot + stateRoot + prevHash.
+// block.ts - Cấu trúc block. Header cam kết txRoot + stateRoot + prevHash.
 // blockHash = hash(header). Sửa tx hay số dư nào -> root đổi -> hash đổi.
 import { encode } from "../crypto/serialize";
 import { hash256, toHex, fromHex } from "../crypto/crypto";

@@ -14,11 +14,13 @@ export interface Actions {
   reset: () => void;
 }
 
-// "Đề xuất" giả lập tốn thời gian — CHỈ ở tầng React, để bạn thật sự thấy giai đoạn
+// "Đề xuất" giả lập tốn thời gian - CHỈ ở tầng React, để bạn thật sự thấy giai đoạn
 // proposing (viên pin "đang sạc" nhấp nháy, nút Chốt block bị khoá) thay vì chốt tức
 // thì. ChainSimulator vẫn đồng bộ 100% (không đụng tới) để giữ đúng như tài liệu
-// (gọi action rồi snapshot() ngay) — độ trễ không phải logic mô phỏng, chỉ là nhịp UI.
-const PROPOSAL_DELAY_MS = 1800;
+// (gọi action rồi snapshot() ngay) - độ trễ không phải logic mô phỏng, chỉ là nhịp UI.
+// Không mô phỏng "độ khó" kiểu proof-of-work (chain này dùng BFT, không có mining) - chỉ
+// kéo dài thời gian xác thực/bỏ phiếu để thấy rõ giai đoạn đề xuất đang chạy.
+const PROPOSAL_DELAY_MS = 100000;
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -73,7 +75,7 @@ export function useChainSimulator(): {
         setPending(true);
         setVotingCount(0);
         // Rải đều PROPOSAL_DELAY_MS thành từng bước, mỗi bước "lộ" thêm 1 validator đã
-        // bỏ phiếu (xem Validators.tsx) — thay vì im lặng suốt rồi hiện cả 4 cùng lúc.
+        // bỏ phiếu (xem Validators.tsx) - thay vì im lặng suốt rồi hiện cả 4 cùng lúc.
         const steps = Math.max(1, validatorCount);
         const stepMs = PROPOSAL_DELAY_MS / steps;
         for (let i = 1; i <= steps; i++) {

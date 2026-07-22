@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
-// token.ts — Hợp đồng token mẫu viết bằng assembly của VM. Số học BigInt.
+// token.ts - Hợp đồng token mẫu viết bằng assembly của VM. Số học BigInt.
 //   method 1 = transfer(to=ARG1, amount=ARG2)
 //   method 2 = balanceOf(addr=ARG1) -> RETURN balance
 //   method 3 = mint(to=ARG1, amount=ARG2)  (chỉ owner)
 // Owner = người DEPLOY (gán 1 lần trong "constructor", chạy đúng lúc deploy nhờ cờ
-// ISCONSTRUCTOR — xem processor.ts). KHÔNG dùng kiểu "ai gọi trước thành owner": cách
-// đó có lỗ hổng front-run kinh điển (như vụ Parity multisig 2017) — ai gửi tx gọi
+// ISCONSTRUCTOR - xem processor.ts). KHÔNG dùng kiểu "ai gọi trước thành owner": cách
+// đó có lỗ hổng front-run kinh điển (như vụ Parity multisig 2017) - ai gửi tx gọi
 // contract trước deployer 1 nhịp là chiếm quyền owner vĩnh viễn.
 // ---------------------------------------------------------------------------
 import { assemble } from "./vm";
@@ -19,7 +19,7 @@ export const M_MINT = 3n;
 
 const source: readonly AsmLine[] = [
   // Constructor: CHỈ đúng lúc deploy (processor.ts đặt isConstructor=true) mới vào
-  // được nhánh này — không tx bên ngoài nào giả mạo được vì đây không phải 1 method
+  // được nhánh này - không tx bên ngoài nào giả mạo được vì đây không phải 1 method
   // trong dispatch, mà là cờ riêng ngoài Tx.
   ["ISCONSTRUCTOR"],
   ["JUMPI", "construct"],
@@ -93,7 +93,7 @@ const source: readonly AsmLine[] = [
   ["SLOAD"],
   ["RETURN"],
 
-  // mint(to, amount) — chỉ owner
+  // mint(to, amount) - chỉ owner
   ["LABEL", "do_mint"],
   ["CALLER"],
   ["PUSH", SLOT_OWNER],

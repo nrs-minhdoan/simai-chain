@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// chain.ts — Bọc quanh consensus: giữ danh sách block + world state, và chốt
+// chain.ts - Bọc quanh consensus: giữ danh sách block + world state, và chốt
 // block mới từ mempool. Dùng chung cho CLI demo lẫn explorer React.
 // ---------------------------------------------------------------------------
 import { WorldState } from "../state/state";

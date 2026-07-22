@@ -1,4 +1,4 @@
-// build.mjs — bundle demo.ts (CLI) với esbuild cho `pnpm start:built`. Import
+// build.mjs - bundle demo.ts (CLI) với esbuild cho `pnpm start:built`. Import
 // extensionless (moduleResolution "Bundler") không được Node ESM tự resolve, nên dist/
 // phải là bundle, không phải file rời. Core không còn barrel index.ts -> không export
 // package "@simai-chain/core" nữa; explorer nạp thẳng từng file trong src/** qua alias

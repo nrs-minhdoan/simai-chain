@@ -2,11 +2,12 @@ import { useState } from "react";
 import type { MempoolView } from "../types/sim";
 import type { UserLabel } from "../types/sim";
 import type { Actions } from "../hooks/useChainSimulator";
+import { NATIVE_SYMBOL } from "@core/constants/config";
 import Pill from "./common/Pill";
 
 const USERS: UserLabel[] = ["alice", "bob", "carol"];
 
-// Chỉ cho gõ số + tối đa 1 dấu chấm — chặn ký tự lạ (vd "10abc") khiến parseFixed
+// Chỉ cho gõ số + tối đa 1 dấu chấm - chặn ký tự lạ (vd "10abc") khiến parseFixed
 // ở tầng core văng lỗi không bắt được khi bấm "Thêm".
 const AMOUNT_CHARS_RE = /^\d*\.?\d*$/;
 const sanitizeAmount = (raw: string): string =>
@@ -58,7 +59,7 @@ export default function Controls({
   return (
     <div className="controls">
       <div className="form-group">
-        <span className="form-title">Chuyển coin</span>
+        <span className="form-title">Chuyển {NATIVE_SYMBOL}</span>
         <div className="form-row">
           <Select value={cFrom} onChange={setCFrom} />
           <span className="arrow">→</span>

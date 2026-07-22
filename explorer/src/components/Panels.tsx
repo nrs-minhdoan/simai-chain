@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { AccountView, SimState } from "../types/sim";
 import Hash from "./common/Hash";
 import Pill from "./common/Pill";
@@ -48,6 +49,39 @@ export function TokenBalances({ token }: { token: SimState["tokenBalances"] }) {
   );
 }
 
+// Dòng log từ consensus.ts luôn mở đầu bằng 1 trong 3 từ này -> tách riêng thành tag,
+// phần còn lại giữ nguyên làm description như cũ.
+const LOG_LEADING_TAG_RE = /^(PRE-COMMIT|PRE-VOTE|COMMIT)\b(.*)$/;
+const LOG_LEADING_TAG_KIND: Record<string, "ok" | "warn" | "muted"> = {
+  COMMIT: "ok",
+  "PRE-COMMIT": "warn",
+  "PRE-VOTE": "muted",
+};
+// Dòng "Height X Round Y: proposer = ..." không tách HEIGHT/ROUND thành tag riêng -
+// chỉ gắn 1 tag INFO chung ở đầu, giữ nguyên toàn bộ nội dung phía sau.
+const LOG_INFO_RE = /^Height\b/;
+
+function renderLogText(text: string): ReactNode {
+  const leading = LOG_LEADING_TAG_RE.exec(text);
+  if (leading) {
+    const tag = leading[1]!;
+    return (
+      <>
+        <Pill kind={LOG_LEADING_TAG_KIND[tag]!}>{tag}</Pill>
+        {leading[2]}
+      </>
+    );
+  }
+  if (LOG_INFO_RE.test(text)) {
+    return (
+      <>
+        <Pill kind="info">INFO</Pill> {text}
+      </>
+    );
+  }
+  return text;
+}
+
 export function LogView({ log }: { log: SimState["log"] }) {
   if (log.length === 0)
     return <p className="empty">Chưa có nhật ký. Đóng một block để xem.</p>;
@@ -55,7 +89,7 @@ export function LogView({ log }: { log: SimState["log"] }) {
     <div className="log">
       {log.map((l) => (
         <div key={l.id} className="log-line mono">
-          {l.text}
+          {renderLogText(l.text)}
         </div>
       ))}
     </div>

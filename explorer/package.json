@@ -1,7 +1,7 @@
 {
   "name": "@simai-chain/explorer",
   "version": "1.0.0",
-  "description": "simai-chain explorer — React + Vite, chạy chain ngay trong trình duyệt",
+  "description": "simai-chain explorer - React + Vite, chạy chain ngay trong trình duyệt",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@9.15.9",

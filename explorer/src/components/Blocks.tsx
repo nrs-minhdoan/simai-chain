@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { BlockView } from "../types/sim";
+import { NATIVE_SYMBOL, HALVING_INTERVAL } from "@core/constants/config";
 import Hash from "./common/Hash";
 import Pill from "./common/Pill";
 
@@ -51,7 +52,7 @@ function BlockCard({
         <span className="block-proposer">{b.proposer}</span>
         <span
           className="block-reward mono"
-          title="Thưởng block cho proposer — giảm nửa mỗi 20 block"
+          title={`Thưởng block cho proposer - giảm nửa mỗi ${HALVING_INTERVAL.toLocaleString("vi-VN")} block`}
         >
           +{b.reward}
         </span>
@@ -60,24 +61,26 @@ function BlockCard({
       {open && (
         <div className="block-detail">
           <div className="kv">
-            <span>prevHash</span>
+            <span>Prev hash</span>
             <Hash value={b.prevHash} />
           </div>
           <div className="kv">
-            <span>txRoot</span>
+            <span>Tx root</span>
             <Hash value={b.txRoot} />
           </div>
           <div className="kv">
-            <span>stateRoot</span>
+            <span>State root</span>
             <Hash value={b.stateRoot} />
           </div>
           <div className="kv">
-            <span>proposer</span>
+            <span>Proposer</span>
             <span>{b.proposer}</span>
           </div>
           <div className="kv">
-            <span>thưởng block</span>
-            <span className="mono">+{b.reward} coin</span>
+            <span>Thưởng block</span>
+            <span className="mono">
+              +{b.reward} {NATIVE_SYMBOL}
+            </span>
           </div>
           {b.txs.length > 0 ? (
             <ul className="tx-list">
@@ -110,7 +113,7 @@ export default function Blocks({ blocks }: { blocks: BlockView[] }) {
     overscan: 6,
     // QUAN TRỌNG: mỗi block mới chốt được unshift lên đầu -> mọi block cũ bị XÔ INDEX
     // (block đang ở index 5 sẽ thành index 6...). Virtualizer mặc định cache chiều cao
-    // đã đo THEO INDEX — không có getItemKey, sau mỗi lần xô index nó gán nhầm chiều
+    // đã đo THEO INDEX - không có getItemKey, sau mỗi lần xô index nó gán nhầm chiều
     // cao đã đo của 1 block (có thể đang mở, cao) cho block khác vừa trôi vào đúng
     // index đó (thường đang đóng, thấp) -> layout vỡ: hụt/chồng như ảnh. Key theo hash
     // (định danh thật của block) thì cache luôn bám đúng block, bất kể nó trôi tới đâu.

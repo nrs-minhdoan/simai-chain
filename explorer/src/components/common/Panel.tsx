@@ -15,7 +15,7 @@ export default function Panel({
   help?: string;
   children: ReactNode;
   actions?: ReactNode;
-  /** Chiếm đúng maxHeight (px) thay vì cao theo nội dung — dùng khi cần khớp chiều cao
+  /** Chiếm đúng maxHeight (px) thay vì cao theo nội dung - dùng khi cần khớp chiều cao
    *  với các panel/cột khác. panel-body trở thành flex:1 để phần còn lại (sau header)
    *  tự co giãn, con bên trong tự lo việc cuộn/virtualize. */
   fill?: boolean;

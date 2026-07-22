@@ -12,7 +12,7 @@ type VoteStatus = "waiting" | "voting" | "valid" | "bogus" | "nil";
 
 /** Chấm trạng thái phiếu của 1 validator, tĩnh (không nhấp nháy) như battery-grid.
  *  - "waiting"/"voting" chỉ là nhịp hiển thị lúc đang đề xuất (votingCount đếm dần),
- *    KHÔNG phải kết quả thật — kết quả thật (valid/bogus/nil) chỉ có sau khi
+ *    KHÔNG phải kết quả thật - kết quả thật (valid/bogus/nil) chỉ có sau khi
  *    sim.mineBlock() chạy xong, lấy từ lastRound.prevotes.
  *  - "valid"/"bogus"/"nil" là màu khớp đúng với battery-grid: xanh/đỏ/xám. */
 function VoteDot({ status }: { status: VoteStatus }) {
@@ -60,7 +60,7 @@ export default function Validators({
         {faulty >= Math.ceil(validators.length / 3) && (
           <span className="warn-text">
             {" "}
-            — vượt ngưỡng, chain có thể dừng đóng block
+            - vượt ngưỡng, chain có thể dừng đóng block
           </span>
         )}
       </p>

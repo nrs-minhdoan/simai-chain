@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// consensus.ts — Đồng thuận BFT kiểu Tendermint (mô phỏng trong 1 tiến trình).
+// consensus.ts - Đồng thuận BFT kiểu Tendermint (mô phỏng trong 1 tiến trình).
 // Vòng: PROPOSE -> PRE-VOTE -> PRE-COMMIT -> COMMIT.
 // An toàn dựa trên 2 trụ, cả hai KHÔNG cần giấu code:
 //   (1) chữ ký không giả mạo được (secp256k1)
@@ -16,7 +16,11 @@ import {
 import { applyTx } from "../transaction/processor";
 import { makeBlock, txRootOf } from "../block/block";
 import { WorldState } from "../state/state";
-import { parseFixed } from "../fixed-point/fixed-point";
+import {
+  BLOCK_REWARD_BASE,
+  HALVING_INTERVAL,
+  MAX_SUPPLY,
+} from "../constants/config";
 import type {
   Validator,
   Vote,
@@ -29,16 +33,35 @@ import type {
   VoteInfo,
 } from "../types/types";
 
-/** Thưởng cho validator đề xuất block, giống coinbase của BTC/ETH — cách duy nhất coin
- *  gốc được tạo thêm sau genesis. Giảm còn 1 nửa mỗi HALVING_INTERVAL block (halving). */
-export const BLOCK_REWARD_BASE = parseFixed("10");
-export const HALVING_INTERVAL = 20;
+/** Pool SAC còn CHƯA phân phối tính tới lúc bắt đầu 1 epoch (epoch = 1 chu kỳ
+ *  HALVING_INTERVAL block, đánh số từ 0) - hàm THUẦN của epoch, mọi node tính ra y hệt
+ *  nhau, không cần lưu thêm state. Mỗi epoch trước đó mint tối đa `rate * HALVING_INTERVAL`
+ *  (rate = BLOCK_REWARD_BASE >> epoch, giống halving BTC/ETH thường), rồi khi SANG epoch
+ *  kế tiếp, HALVING đồng thời BURN một nửa phần pool còn lại sau khi mint - khác với việc
+ *  giảm rate mint mỗi block: đây là huỷ VĨNH VIỄN phần "chưa ai được nhận", không phải
+ *  chuyển cho ai. Không tính phần cấp phát genesis (`WorldState.credit()` gọi trực tiếp
+ *  ở `explorer/src/simulator/chain-simulator.ts`/`demo.ts`, ngoài blockReward()) vào pool
+ *  này - số đó quá nhỏ so với MAX_SUPPLY nên bỏ qua để công thức đơn giản. */
+function poolAtEpochStart(epoch: number): bigint {
+  let pool = MAX_SUPPLY;
+  for (let e = 0; e < epoch; e++) {
+    const rate = BLOCK_REWARD_BASE >> BigInt(e);
+    const mintedThisEpoch = rate * BigInt(HALVING_INTERVAL);
+    const afterMint = mintedThisEpoch < pool ? pool - mintedThisEpoch : 0n;
+    pool = afterMint - afterMint / 2n; // burn 1 nửa phần CHƯA phân phối khi bước sang epoch mới
+  }
+  return pool;
+}
 
-/** BigInt >> = chia nguyên cho 2^n — đúng kiểu halving thật (BTC cũng làm vậy), tự
- *  tiến về 0 sau đủ nhiều lần halving, không cần xử lý riêng. */
+/** BigInt >> = chia nguyên cho 2^n - đúng kiểu halving thật (BTC cũng làm vậy), tự
+ *  tiến về 0 sau đủ nhiều lần halving, không cần xử lý riêng. Reward thực tế còn bị chặn
+ *  bởi pool còn lại (xem poolAtEpochStart) - không bao giờ mint vượt trần MAX_SUPPLY dù
+ *  tham số reward/halving có đổi thế nào sau này. */
 export function blockReward(height: number): bigint {
-  const halvings = Math.floor(height / HALVING_INTERVAL);
-  return BLOCK_REWARD_BASE >> BigInt(halvings);
+  const epoch = Math.floor(height / HALVING_INTERVAL);
+  const rate = BLOCK_REWARD_BASE >> BigInt(epoch);
+  const pool = poolAtEpochStart(epoch);
+  return rate < pool ? rate : pool;
 }
 
 function voteDigest(
@@ -125,7 +148,7 @@ export function proposeBlock(
     if (r.ok || r.kind === "call-revert") included.push(tx);
     else rejected.push({ tx, reason: r.error }); // tx sai chữ ký/nonce/không đủ số dư -> bị loại
   }
-  // Thưởng block cho proposer — PHẢI tính trước stateRoot, và validateBlock() bên dưới
+  // Thưởng block cho proposer - PHẢI tính trước stateRoot, và validateBlock() bên dưới
   // phải làm y hệt bước này, nếu không validator trung thực sẽ tính ra stateRoot khác.
   working.credit(proposer.address, blockReward(height));
   const block = makeBlock({
@@ -147,7 +170,7 @@ function validateBlock(block: Block, preState: WorldState): boolean {
     const r = applyTx(working, tx);
     if (!(r.ok || r.kind === "call-revert")) return false;
   }
-  // Y HỆT bước thưởng trong proposeBlock() — nếu lệch, stateRoot sẽ không khớp và
+  // Y HỆT bước thưởng trong proposeBlock() - nếu lệch, stateRoot sẽ không khớp và
   // block hợp lệ sẽ bị coi nhầm là gian lận.
   working.credit(
     block.header.proposer,
@@ -190,6 +213,15 @@ function voteInfoFor(
   return blockValid ? "valid" : "nil";
 }
 
+/** Chọn proposer bằng hash(height, round) thay vì `(height + round) % n` thuần - vẫn
+ *  HOÀN TOÀN tất định (mọi node hash cùng input ra cùng 1 số, không dùng Math.random
+ *  hay Date.now, giữ đúng bất biến determinism ở §4 CLAUDE.md) nhưng thứ tự trông
+ *  "xáo trộn" thay vì lặp lại y hệt vòng round-robin V0,V1,V2,V3,V0,... dễ đoán trước. */
+function proposerIndex(height: number, round: number, n: number): number {
+  const digest = hash256(encode([BigInt(height), BigInt(round)]));
+  return Number(BigInt(toHex(digest)) % BigInt(n));
+}
+
 export function runRound(p: RunRoundParams): RunRoundResult {
   const { validators, height, round = 0, prevHash, preState, mempool, log } = p;
   const N = validators.length;
@@ -200,10 +232,8 @@ export function runRound(p: RunRoundParams): RunRoundResult {
   const totalPower = [...powers.values()].reduce((a, b) => a + b, 0n);
   const thresholdPower = (totalPower * 2n) / 3n + 1n; // quyền tối thiểu vượt > 2/3
 
-  const proposer = validators[(height + round) % N]!;
-  log(
-    `  height ${height} round ${round}: proposer = ${short(proposer.wallet.address)}`,
-  );
+  const proposer = validators[proposerIndex(height, round, N)]!;
+  log(`Height ${height} Round ${round}: proposer = ${proposer.wallet.address}`);
 
   const { block, postState, rejected } = proposeBlock(
     proposer.wallet,
@@ -214,9 +244,7 @@ export function runRound(p: RunRoundParams): RunRoundResult {
     mempool,
   );
   for (const r of rejected) {
-    log(
-      `  ✗ tx bị loại khỏi block đề xuất (${short(r.tx.hash!)}): ${r.reason}`,
-    );
+    log(`✗ tx bị loại khỏi block đề xuất (${r.tx.hash!}): ${r.reason}`);
   }
   const good = block.hash;
   const bogus = toHex(hash256(fromHex(good))); // hash "rác" node xấu bịa ra
@@ -241,7 +269,7 @@ export function runRound(p: RunRoundParams): RunRoundResult {
   }
   const prevotePower = tally(prevotes, good, powers, height, round, set);
   log(
-    `  PRE-VOTE  cho block hợp lệ: ${prevotePower}/${totalPower} quyền biểu quyết`,
+    `PRE-VOTE cho block hợp lệ: ${prevotePower}/${totalPower} quyền biểu quyết`,
   );
 
   // --- PRE-COMMIT --- (tính trước để telemetry đầy đủ dù có chốt hay không)
@@ -271,15 +299,15 @@ export function runRound(p: RunRoundParams): RunRoundResult {
 
   if (!over2_3(prevotePower, totalPower)) {
     log(
-      `  ✗ không đạt > 2/3 pre-vote -> KHÔNG chốt (an toàn: không có block xung đột nào commit)`,
+      `✗ không đạt > 2/3 pre-vote -> KHÔNG chốt (an toàn: không có block xung đột nào commit)`,
     );
     return { committed: false, reason: "no-polka", telemetry };
   }
   log(
-    `  PRE-COMMIT cho block hợp lệ: ${precommitPower}/${totalPower} quyền biểu quyết`,
+    `PRE-COMMIT cho block hợp lệ: ${precommitPower}/${totalPower} quyền biểu quyết`,
   );
   if (!over2_3(precommitPower, totalPower)) {
-    log(`  ✗ không đạt > 2/3 pre-commit -> KHÔNG chốt`);
+    log(`✗ không đạt > 2/3 pre-commit -> KHÔNG chốt`);
     return { committed: false, reason: "no-2/3-precommit", telemetry };
   }
 
@@ -288,7 +316,7 @@ export function runRound(p: RunRoundParams): RunRoundResult {
     (pc) => pc.blockHash === good && verifyVote(pc, height, round, set),
   );
   log(
-    `  ✓ COMMIT block ${short(block.hash)} với ${block.commit.length} chữ ký pre-commit`,
+    `COMMIT block ${block.hash} với ${block.commit.length} chữ ký pre-commit`,
   );
   return {
     committed: true,

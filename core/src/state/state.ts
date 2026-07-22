@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// state.ts — Trạng thái toàn cục theo mô hình account.
+// state.ts - Trạng thái toàn cục theo mô hình account.
 // stateRoot = merkle của các account sắp theo địa chỉ -> tất định; đổi 1 bit
 // nào đó cũng đổi root (phát hiện gian lận).
 // ---------------------------------------------------------------------------

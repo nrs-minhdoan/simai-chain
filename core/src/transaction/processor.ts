@@ -1,11 +1,12 @@
 // ---------------------------------------------------------------------------
-// processor.ts — Luật chuyển trạng thái từ 1 giao dịch. Mọi node chạy y hệt ->
-// ra state root y hệt. Thứ tự: chữ ký -> nonce -> số dư -> thực thi.
+// processor.ts - Luật chuyển trạng thái từ 1 giao dịch. Mọi node chạy y hệt ->
+// ra state root y hệt. Thứ tự: chữ ký -> nonce -> phí (burn) -> số dư -> thực thi.
 // ---------------------------------------------------------------------------
 import { hexToBytes } from "@noble/hashes/utils";
 import { verifyTx } from "./transaction";
 import { run } from "../vm/vm";
 import { hash256, toHex, fromHex } from "../crypto/crypto";
+import { DEFAULT_GAS_LIMIT, TX_FEE } from "../constants/config";
 import type { WorldState } from "../state/state";
 import type { Tx, Hex } from "../types/types";
 
@@ -33,8 +34,16 @@ export function applyTx(state: WorldState, tx: Tx): ApplyResult {
   if (tx.nonce !== sender.nonce)
     return {
       ok: false,
-      error: `nonce sai (mong đợi ${sender.nonce}, nhận ${tx.nonce}) — có thể là replay`,
+      error: `nonce sai (mong đợi ${sender.nonce}, nhận ${tx.nonce}) - có thể là replay`,
     };
+
+  // Phí giao dịch: BURN (huỷ hẳn, không credit cho proposer hay ai khác) - trừ ngay khi
+  // tx đủ điều kiện được đưa vào block, kể cả nếu phần thực thi bên dưới revert (đã tốn
+  // tài nguyên xử lý, giống EVM vẫn tính gas dù tx revert). Chỉ tx bị TỪ CHỐI hẳn (không
+  // đủ trả phí) mới không mất phí, vì tx đó không được đưa vào block.
+  if (sender.balance < TX_FEE)
+    return { ok: false, error: "không đủ số dư để trả phí giao dịch" };
+  state.debit(tx.from, TX_FEE);
 
   if (tx.type === "transfer") {
     if (!tx.to) return { ok: false, error: "thiếu địa chỉ đích" };
@@ -53,7 +62,7 @@ export function applyTx(state: WorldState, tx: Tx): ApplyResult {
     const addr = predictContractAddress(tx.from, tx.nonce);
     const acct = state.get(addr);
     // "Constructor": chạy code 1 lần NGAY LÚC DEPLOY với caller = người deploy và cờ
-    // isConstructor — cờ này KHÔNG nằm trong Tx nên không tx nào sau đó giả mạo lại
+    // isConstructor - cờ này KHÔNG nằm trong Tx nên không tx nào sau đó giả mạo lại
     // được, tránh lỗ hổng "ai gọi contract trước cũng có thể tự nhận làm owner"
     // (kiểu lỗi Parity multisig 2017: contract chưa khởi tạo, ai init trước là chủ).
     const result = run(tx.code, {
@@ -114,12 +123,12 @@ export function applyTx(state: WorldState, tx: Tx): ApplyResult {
   };
 }
 
-/** Đọc read-only (không đổi state, không cần nonce/chữ ký) — như eth_call. */
+/** Đọc read-only (không đổi state, không cần nonce/chữ ký) - như eth_call. */
 export function query(
   state: WorldState,
   contractAddr: Hex,
   args: bigint[],
-  gasLimit = 100000n,
+  gasLimit = DEFAULT_GAS_LIMIT,
 ): bigint | null {
   const acct = state.get(contractAddr);
   if (!acct.code) return null;

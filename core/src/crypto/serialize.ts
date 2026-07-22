@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// serialize.ts — Serialization CANONICAL, tất định (KHÔNG dùng JSON).
+// serialize.ts - Serialization CANONICAL, tất định (KHÔNG dùng JSON).
 // Hai node phải ra CÙNG chuỗi byte cho cùng object, nếu không hash sẽ khác ->
 // vỡ đồng thuận. Định dạng: [tag(1)][len(4 BE)][payload].
 //   0x01 BigInt | 0x02 bytes | 0x03 string | 0x04 array

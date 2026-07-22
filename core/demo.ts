@@ -1,5 +1,5 @@
 // ===========================================================================
-// demo.ts — Kịch bản CLI. Chạy: pnpm --filter @simai-chain/core demo
+// demo.ts - Kịch bản CLI. Chạy: pnpm --filter @simai-chain/core demo
 // ===========================================================================
 import { newWallet, toHex } from "./src/crypto/crypto";
 import { WorldState } from "./src/state/state";
@@ -10,6 +10,7 @@ import { txRootOf, headerDigest } from "./src/block/block";
 import { parseFixed, formatFixed } from "./src/fixed-point/fixed-point";
 import { tokenCode, M_TRANSFER, M_BALANCEOF, M_MINT } from "./src/vm/token";
 import { Chain } from "./src/chain/chain";
+import { NATIVE_SYMBOL } from "./src/constants/config";
 import type { Validator, Tx, Hex } from "./src/types/types";
 
 const line = (s = ""): void => console.log(s);
@@ -22,7 +23,7 @@ const H = (t: string): void => {
 const addrToBig = (a: Hex): bigint => BigInt(a);
 
 // ---------------------------------------------------------------------------
-H("0.  SỐ HỌC CHÍNH XÁC — vì sao KHÔNG dùng Number cho tiền");
+H("0.  SỐ HỌC CHÍNH XÁC - vì sao KHÔNG dùng Number cho tiền");
 line(`  Number:  0.1 + 0.2            = ${0.1 + 0.2}   ❌ sai`);
 line(`  Number:  2^53 + 1             = ${2 ** 53 + 1}   ❌ mất chính xác`);
 line(
@@ -34,7 +35,7 @@ line(
 );
 
 // ---------------------------------------------------------------------------
-H("1.  KHỞI TẠO — 4 validator (BFT chịu <1/3 lỗi) + 3 người dùng");
+H("1.  KHỞI TẠO - 4 validator (BFT chịu <1/3 lỗi) + 3 người dùng");
 const validators: Validator[] = [0, 1, 2, 3].map((i) => ({
   wallet: newWallet(),
   byzantine: "none",
@@ -52,17 +53,17 @@ line(
 const chain = new Chain(validators);
 
 // ---------------------------------------------------------------------------
-H("2.  GENESIS — cấp phát ban đầu, chốt bằng đồng thuận");
+H("2.  GENESIS - cấp phát ban đầu, chốt bằng đồng thuận");
 chain.state.credit(alice.address, parseFixed("100"));
 chain.state.credit(bob.address, parseFixed("50"));
 line(
-  `  Cấp: alice=100, bob=50 coin. stateRoot = ${short(chain.state.stateRoot())}`,
+  `  Cấp: alice=100, bob=50 ${NATIVE_SYMBOL}. stateRoot = ${short(chain.state.stateRoot())}`,
 );
 chain.commit([], { log: line });
 line(`  Genesis block ${short(chain.head!.hash)} đã chốt.`);
 
 // ---------------------------------------------------------------------------
-H("3.  BLOCK 1 — chuyển tiền có chữ ký, VỚI 1 validator BYZANTINE");
+H("3.  BLOCK 1 - chuyển tiền có chữ ký, VỚI 1 validator BYZANTINE");
 const tx1 = makeTx({
   type: "transfer",
   from: alice.address,
@@ -93,7 +94,7 @@ line(
 );
 
 // ---------------------------------------------------------------------------
-H("4.  BLOCK 2 — deploy smart contract token");
+H("4.  BLOCK 2 - deploy smart contract token");
 const deploy = makeTx({
   type: "deploy",
   from: alice.address,
@@ -107,7 +108,7 @@ for (const [addr, a] of chain.state.accounts) if (a.code) tokenAddr = addr;
 line(`  Token deploy tại ${short(tokenAddr)}`);
 
 // ---------------------------------------------------------------------------
-H("5.  BLOCK 3 — mint + transfer token, kiểm tra TÍNH TẤT ĐỊNH");
+H("5.  BLOCK 3 - mint + transfer token, kiểm tra TÍNH TẤT ĐỊNH");
 const mint = makeTx({
   type: "call",
   from: alice.address,

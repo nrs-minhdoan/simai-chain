@@ -7,7 +7,7 @@ const BATTERY_MIN_WIDTH = 26;
 const BATTERY_GAP = 5;
 const ROWS = 5;
 
-/** Vòng đang đề xuất/vote NGAY LÚC NÀY — `lit` đếm theo `votingCount` (xem
+/** Vòng đang đề xuất/vote NGAY LÚC NÀY - `lit` đếm theo `votingCount` (xem
  *  useChainSimulator.ts), tăng dần từng validator một thay vì nhảy thẳng lên
  *  4/4 khi có kết quả, để khớp với việc validator bỏ phiếu KHÔNG đồng thời. */
 interface PendingSlot {
@@ -18,7 +18,7 @@ interface PendingSlot {
 type BatterySlot = RoundHealthView | null | PendingSlot;
 
 /** 1 block = 1 "viên pin" 4 nấc tĩnh (không nhấp nháy). Nấc sáng = % quyền biểu quyết
- *  đã bầu cho block thật, quy về thang 4 (xem roundHealthView() ở sim.ts) — không phải
+ *  đã bầu cho block thật, quy về thang 4 (xem roundHealthView() ở sim.ts) - không phải
  *  "4 giai đoạn" propose/prevote/precommit/commit, vì luật hiện tại precommit-đạt-ngưỡng
  *  và commit luôn xảy ra cùng lúc nên 2 "giai đoạn" đó sẽ luôn y hệt nhau.
  *  Xanh = đã đóng block. Đỏ = đang vote/chưa đủ phiếu (gồm cả vòng đang đề xuất ngay lúc
@@ -78,13 +78,13 @@ export default function ConsensusGauge({
   t: TelemetryView | null;
   history: (RoundHealthView | null)[];
   pending: boolean;
-  /** Số validator đã "lộ" phiếu trong vòng đang đề xuất (xem useChainSimulator.ts) —
+  /** Số validator đã "lộ" phiếu trong vòng đang đề xuất (xem useChainSimulator.ts) -
    *  dùng để lấp dần nấc pin thay vì để trống suốt tới khi có kết quả. */
   votingCount: number;
   validatorCount: number;
 }) {
   const gridRef = useRef<HTMLDivElement>(null);
-  // Không cố định số ô nữa — đo bề rộng thật của lưới, suy ra số cột vừa khít, rồi luôn
+  // Không cố định số ô nữa - đo bề rộng thật của lưới, suy ra số cột vừa khít, rồi luôn
   // hiển thị đủ ROWS (5) hàng thay vì 1 tổng cố định (trước là 200 dù màn rộng/hẹp thế nào).
   const [columns, setColumns] = useState(10);
 
@@ -116,8 +116,8 @@ export default function ConsensusGauge({
   ].reverse();
   // Đang đề xuất -> thêm 1 ô "sống" ở CUỐI (đại diện vòng đang chạy ngay lúc này, sắp
   // trở thành mới nhất), giữ tổng luôn đúng slotCount. Nấc sáng của ô này tăng dần theo
-  // votingCount (số validator đã "bỏ phiếu" tính tới lúc này) quy về thang 4 — cùng công
-  // thức với roundHealthView() ở sim.ts — để pin thể hiện đúng việc validator vote KHÔNG
+  // votingCount (số validator đã "bỏ phiếu" tính tới lúc này) quy về thang 4 - cùng công
+  // thức với roundHealthView() ở sim.ts - để pin thể hiện đúng việc validator vote KHÔNG
   // đồng thời, thay vì đứng yên 0/4 suốt rồi nhảy thẳng lên khi có kết quả.
   const pendingLit =
     validatorCount > 0 ? Math.round((votingCount / validatorCount) * 4) : 0;

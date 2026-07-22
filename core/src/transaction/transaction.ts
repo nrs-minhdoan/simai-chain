@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// transaction.ts — Giao dịch có chữ ký. Chữ ký ký trên HASH của bản encode
+// transaction.ts - Giao dịch có chữ ký. Chữ ký ký trên HASH của bản encode
 // canonical -> đổi 1 bit thì hash đổi, chữ ký sai. nonce chống replay.
 // ---------------------------------------------------------------------------
 import { encode } from "../crypto/serialize";
@@ -10,6 +10,7 @@ import {
   fromHex,
   toHex,
 } from "../crypto/crypto";
+import { DEFAULT_GAS_LIMIT } from "../constants/config";
 import type { Tx, TxType, Program, Hex } from "../types/types";
 
 /** Encode chương trình (deploy) sang bytes tất định để đưa vào hash tx. */
@@ -56,7 +57,7 @@ export function makeTx(p: MakeTxParams): Tx {
     nonce: p.nonce,
     to: p.to ?? null,
     value: p.value ?? 0n,
-    gasLimit: p.gasLimit ?? 100000n,
+    gasLimit: p.gasLimit ?? DEFAULT_GAS_LIMIT,
     dataArgs: p.dataArgs ?? [],
     code: p.code ?? null,
     sig: null,

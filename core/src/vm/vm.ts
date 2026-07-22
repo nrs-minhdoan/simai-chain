@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// vm.ts — Máy ảo cho smart contract. TẤT ĐỊNH tuyệt đối:
+// vm.ts - Máy ảo cho smart contract. TẤT ĐỊNH tuyệt đối:
 //   * chỉ số học BigInt (không float/NaN/Number)
 //   * không Date.now / Math.random / thứ tự lặp bất định
 //   * ĐO GAS: hết gas -> revert, chặn vòng lặp vô hạn
@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------------------
 import { hexToBytes } from "@noble/hashes/utils";
 import { hash256, toHex } from "../crypto/crypto";
+import { DEFAULT_GAS_LIMIT } from "../constants/config";
 import type { Program, AsmLine, OpCode } from "../types/types";
 
 const MASK = (1n << 256n) - 1n; // số học modulo 2^256, như EVM
@@ -75,7 +76,7 @@ export interface RunContext {
   args?: bigint[];
   gasLimit?: bigint;
   storage: Map<bigint, bigint>;
-  /** true CHỈ khi processor.ts tự gọi lúc deploy (constructor) — không phải trường
+  /** true CHỈ khi processor.ts tự gọi lúc deploy (constructor) - không phải trường
    *  nào trong Tx, nên không tx bên ngoài nào giả mạo được sau khi đã deploy xong. */
   isConstructor?: boolean;
 }
@@ -94,7 +95,7 @@ export function run(program: Program, ctx: RunContext): RunResult {
     caller = 0n,
     value = 0n,
     args = [],
-    gasLimit = 100000n,
+    gasLimit = DEFAULT_GAS_LIMIT,
     storage,
     isConstructor = false,
   } = ctx;

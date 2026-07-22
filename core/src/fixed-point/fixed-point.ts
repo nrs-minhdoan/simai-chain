@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// fixed-point.ts — Xử lý số CHÍNH XÁC. Mọi giá trị là integer BigInt đã nhân
+// fixed-point.ts - Xử lý số CHÍNH XÁC. Mọi giá trị là integer BigInt đã nhân
 // 10^18 (mô hình "wei"). Không float ở bất kỳ đường đi nào ảnh hưởng state.
 // ---------------------------------------------------------------------------
 export const DECIMALS = 18n;

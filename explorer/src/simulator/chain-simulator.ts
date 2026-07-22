@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// simulator/chain-simulator.ts — Bộ điều khiển mô phỏng (không phụ thuộc React). Giữ
+// simulator/chain-simulator.ts - Bộ điều khiển mô phỏng (không phụ thuộc React). Giữ
 // Chain, ví, cấu hình validator, mempool; cung cấp action + xuất "snapshot" thuần
 // chuỗi/số để React render (đã đổi BigInt -> string/number cho an toàn).
 // ---------------------------------------------------------------------------
@@ -31,8 +31,9 @@ import type {
   LogEntry,
   SimState,
 } from "../types/sim";
+import { VALIDATOR_COUNT } from "../constants/config";
 
-// Lưới pin ở UI giờ không cố định số ô — nó tự đo bề rộng và luôn hiển thị đủ 5 hàng
+// Lưới pin ở UI giờ không cố định số ô - nó tự đo bề rộng và luôn hiển thị đủ 5 hàng
 // (xem ConsensusGauge.tsx), nên số này chỉ cần đủ LỚN để phủ cả màn hình rộng nhất
 // (.app max-width 1400px -> tối đa ~41 cột x 5 hàng ≈ 205 ô), không cần khớp chính xác.
 const ROUND_HISTORY_SIZE = 300;
@@ -59,7 +60,7 @@ export class ChainSimulator {
   }
 
   reset(): void {
-    this.validators = [0, 1, 2, 3].map((i) => ({
+    this.validators = Array.from({ length: VALIDATOR_COUNT }, (_, i) => ({
       wallet: newWallet(),
       byzantine: "none",
       power: 1n,
@@ -94,7 +95,11 @@ export class ChainSimulator {
   }
 
   private pushLog(text: string): void {
-    this.log.unshift({ id: this.logSeq++, text });
+    // trim ở đây (nguồn duy nhất) - các dòng log từ consensus.ts có 2 dấu cách đầu dòng
+    // để canh cột khi in ra CLI (demo.ts), không liên quan gì tới UI. Trước đây chỉ
+    // mineBlock() tự trim() trước khi đẩy vào, còn genesis (reset()) thì không, khiến
+    // dòng log của genesis bị thụt lề trong khi các dòng sau lại không - không thẳng hàng.
+    this.log.unshift({ id: this.logSeq++, text: text.trim() });
   }
 
   private label(a: Hex): string {
@@ -108,7 +113,7 @@ export class ChainSimulator {
   }
 
   /** parseFixed văng lỗi nếu amount không phải số hợp lệ (vd gọi trực tiếp từ script/test,
-   *  bỏ qua UI validate) — bắt lại ở đây để 1 input xấu không làm crash cả action. */
+   *  bỏ qua UI validate) - bắt lại ở đây để 1 input xấu không làm crash cả action. */
   private parseAmount(amount: string): bigint | null {
     try {
       return parseFixed(amount);
@@ -220,12 +225,12 @@ export class ChainSimulator {
     if (res.committed) {
       this.labelToken();
       // Tx nào bị loại khỏi block (không đủ số dư, sai nonce...) thì GIỮ LẠI trong mempool
-      // và báo rõ lý do — trước đây bị xoá âm thầm, trông như "giao dịch tự nhiên biến mất".
+      // và báo rõ lý do - trước đây bị xoá âm thầm, trông như "giao dịch tự nhiên biến mất".
       const rejectedHashes = new Set(res.rejected.map((r) => r.tx.hash));
       for (const r of res.rejected) {
         const note =
           this.mempool.find((m) => m.tx.hash === r.tx.hash)?.note ?? r.tx.type;
-        this.pushLog(`✗ bị loại khỏi block — ${note}: ${r.reason}`);
+        this.pushLog(`✗ bị loại khỏi block - ${note}: ${r.reason}`);
       }
       this.mempool = this.mempool.filter((m) => rejectedHashes.has(m.tx.hash));
     }
@@ -305,7 +310,7 @@ export class ChainSimulator {
 
   private roundHealthView(t: RoundTelemetry): RoundHealthView {
     // Nấc sáng = % quyền biểu quyết đã bầu cho block thật (prevotePower/totalPower),
-    // quy về thang 4 nấc — không đếm đầu người, để đúng cả khi validator có power khác
+    // quy về thang 4 nấc - không đếm đầu người, để đúng cả khi validator có power khác
     // nhau (hiện tại 4 validator power bằng nhau nên trùng số, nhưng công thức đúng bản chất).
     const pct =
       t.totalPower > 0n ? Number(t.prevotePower) / Number(t.totalPower) : 0;
@@ -317,7 +322,7 @@ export class ChainSimulator {
   }
 
   /** Luôn trả về đúng ROUND_HISTORY_SIZE phần tử, mới nhất trước; vòng nào chưa xảy ra
-   *  (chain còn ngắn) là `null` — UI vẽ ô xám cho các vị trí đó. */
+   *  (chain còn ngắn) là `null` - UI vẽ ô xám cho các vị trí đó. */
   private buildRoundHistoryGrid(): (RoundHealthView | null)[] {
     const newestFirst = [...this.roundHistory]
       .reverse()
@@ -334,7 +339,7 @@ export class ChainSimulator {
       this.validators.map((v) => v.wallet.address),
     );
     // Nhóm: người dùng trước, validator giữa (số dư tăng dần nhờ thưởng block), contract
-    // (Token) cuối — thay vì chỉ "contract xuống cuối" như trước, dễ nhìn hơn khi có
+    // (Token) cuối - thay vì chỉ "contract xuống cuối" như trước, dễ nhìn hơn khi có
     // thêm 4 tài khoản validator.
     const rank = (a: { isContract: boolean; isValidator: boolean }) =>
       a.isContract ? 2 : a.isValidator ? 1 : 0;
