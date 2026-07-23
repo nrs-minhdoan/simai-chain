@@ -58,7 +58,7 @@ function BlockCard({
         </span>
         <span className="chevron">{open ? "▾" : "▸"}</span>
       </button>
-      {open && (
+      <div className={`block-detail-wrap ${open ? "open" : ""}`}>
         <div className="block-detail">
           <div className="kv">
             <span>Prev hash</span>
@@ -92,7 +92,7 @@ function BlockCard({
             <p className="empty">Block rỗng (không có giao dịch).</p>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

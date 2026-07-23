@@ -10,9 +10,17 @@ const VIEWPORT_MARGIN = 12;
  *  (và bất kỳ ancestor có overflow nào khác) cắt mất một phần nội dung. */
 export default function InfoTip({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
+  // Popover là portal (fixed position, ngoài flow) nên không dùng được kỹ thuật
+  // grid-rows như .block-detail-wrap - thay vào đó giữ node trong DOM qua lúc đóng,
+  // chờ animation "pop-out" chạy xong (onAnimationEnd) rồi mới thực sự unmount.
+  const [rendered, setRendered] = useState(false);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) setRendered(true);
+  }, [open]);
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
@@ -66,14 +74,17 @@ export default function InfoTip({ text }: { text: string }) {
       >
         ?
       </button>
-      {open &&
+      {rendered &&
         pos &&
         createPortal(
           <div
             ref={popRef}
-            className="info-tip-pop"
+            className={`info-tip-pop ${open ? "" : "closing"}`}
             role="tooltip"
             style={{ top: pos.top, left: pos.left, width: POP_WIDTH }}
+            onAnimationEnd={() => {
+              if (!open) setRendered(false);
+            }}
           >
             {text}
           </div>,

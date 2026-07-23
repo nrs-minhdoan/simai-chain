@@ -539,7 +539,23 @@ h2 {
   letter-spacing: normal;
   line-height: 1.5;
   text-align: left;
-  animation: pop-in var(--dur-med) var(--ease-out);
+  /* fill-mode forwards bắt buộc: mặc định (none) khi animation chạy xong sẽ trả
+     style về giá trị tĩnh (opacity mặc định = 1) thay vì giữ trạng thái cuối keyframe
+     -> pop-out sẽ chớp ngược lại opacity 1 đúng 1 frame trước khi bị unmount. */
+  animation: pop-in var(--dur-med) var(--ease-out) forwards;
+}
+.info-tip-pop.closing {
+  animation: pop-out var(--dur-med) var(--ease-out) forwards;
+}
+@keyframes pop-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
 }
 @keyframes pop-in {
   from {
@@ -568,24 +584,46 @@ h2 {
   padding: 9px 14px;
   background: none;
   border: none;
+  border-bottom: 1px solid transparent;
   color: var(--muted);
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  transition: border-color var(--dur-med) var(--ease-out);
 }
 .intro-toggle:hover {
   color: var(--text);
 }
 .intro.open .intro-toggle {
-  border-bottom: 1px solid var(--line-soft);
+  border-color: var(--line-soft);
 }
-.intro p {
+/* Cùng kỹ thuật grid-rows với .block-detail-wrap - padding của <p> cũng phải tự
+   transition (không co được theo track), nếu không đóng lại sẽ dư ra đúng bằng padding. */
+.intro-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-med) var(--ease-out),
+    opacity var(--dur-med) var(--ease-out);
+}
+.intro-body.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.intro-body p {
+  overflow: hidden;
+  min-height: 0;
   margin: 0;
-  padding: 10px 14px 12px;
+  padding: 0 14px;
   color: var(--muted);
   font-size: 12.5px;
   line-height: 1.6;
+  transition: padding var(--dur-med) var(--ease-out);
+}
+.intro-body.open p {
+  padding: 10px 14px 12px;
 }
 .intro b {
   color: var(--text);
@@ -912,10 +950,36 @@ select {
   color: var(--dim);
   transition: transform var(--dur-fast) var(--ease-out);
 }
+/* Grid-rows trick: 0fr <-> 1fr cho phép animate chiều cao "auto" cả 2 chiều mở lẫn
+   đóng, không cần đo chiều cao bằng JS. overflow:hidden trên .block-detail bắt buộc
+   để min-content của nó = 0, nhờ vậy 0fr thật sự co về 0 thay vì bị nội dung chặn lại.
+   padding/border-top KHÔNG được co theo track (chúng nằm ngoài phần "content" mà grid
+   zero-hoá) -> nếu để cố định, đóng lại sẽ dư ra đúng bằng padding+border thay vì về 0
+   -> phải tự transition luôn 2 giá trị này cùng lúc với grid-template-rows. */
+.block-detail-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--dur-med) var(--ease-out),
+    opacity var(--dur-med) var(--ease-out);
+}
+.block-detail-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
 .block-detail {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 13px;
+  border-top: 0 solid var(--line-soft);
+  transition:
+    padding var(--dur-med) var(--ease-out),
+    border-top-width var(--dur-med) var(--ease-out);
+}
+.block-detail-wrap.open .block-detail {
   padding: 4px 13px 13px;
-  border-top: 1px solid var(--line-soft);
-  animation: rise-in var(--dur-med) var(--ease-out);
+  border-top-width: 1px;
 }
 .kv {
   display: flex;

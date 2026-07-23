@@ -123,7 +123,7 @@ export default function App() {
           <span>💡 Chưa biết blockchain là gì?</span>
           <span className="chevron">{showIntro ? "▾" : "▸"}</span>
         </button>
-        {showIntro && (
+        <div className={`intro-body ${showIntro ? "open" : ""}`}>
           <p>
             Hình dung 4 máy tính (<b>validator</b>) cùng giữ chung 1 cuốn sổ kế
             toán không ai sửa được sau khi ghi - đó là <b>blockchain</b>. Mỗi
@@ -134,7 +134,7 @@ export default function App() {
             <b>Chạy tự động</b> để xem cả 4 validator liên tục bỏ phiếu như 1
             mạng thật đang chạy.
           </p>
-        )}
+        </div>
       </div>
 
       <section className="hero">
