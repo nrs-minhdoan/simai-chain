@@ -83,6 +83,10 @@ export interface Tx {
   gasLimit: bigint;
   dataArgs: bigint[];
   code: Program | null;
+  /** Ghi chú/metadata tự do do người gửi đính kèm (vd lời nhắn) - không ảnh hưởng thực
+   *  thi, chỉ để hiển thị, nhưng vẫn nằm trong digest đã ký (xem txDigest ở
+   *  transaction.ts) nên không thể sửa sau khi ký mà chữ ký còn hợp lệ. */
+  memo: string;
   sig: Signature | null;
   hash?: Hex;
 }

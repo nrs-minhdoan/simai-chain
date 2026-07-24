@@ -35,17 +35,36 @@ export function Accounts({ accounts }: { accounts: AccountView[] }) {
   );
 }
 
-export function TokenBalances({ token }: { token: SimState["tokenBalances"] }) {
+export function TokenBalances({
+  token,
+  symbol,
+  maxSupply,
+  totalSupply,
+}: {
+  token: SimState["tokenBalances"];
+  symbol: SimState["tokenSymbol"];
+  maxSupply: SimState["tokenMaxSupply"];
+  totalSupply: SimState["tokenTotalSupply"];
+}) {
   if (token.length === 0) return <p className="empty">Chưa deploy token.</p>;
   return (
-    <ul className="token-bal">
-      {token.map((t) => (
-        <li key={t.label}>
-          <span>{t.label}</span>
-          <span className="mono num">{t.balance}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      {symbol && (
+        <p className="token-supply">
+          <span className="mono">{symbol}</span> · tổng cung đã mint{" "}
+          <span className="mono">{totalSupply}</span> / trần{" "}
+          <span className="mono">{maxSupply}</span>
+        </p>
+      )}
+      <ul className="token-bal">
+        {token.map((t) => (
+          <li key={t.label}>
+            <span>{t.label}</span>
+            <span className="mono num">{t.balance}</span>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

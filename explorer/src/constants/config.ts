@@ -8,4 +8,4 @@
 /** Số validator tham gia đồng thuận trong mô phỏng (V0..V{n-1}), mỗi validator power = 1n
  *  nên ngưỡng > 2/3 tự tính lại theo số này (xem snapshot() ở simulator/chain-simulator.ts)
  *  - đổi số ở đây là đủ, không cần sửa gì khác. */
-export const VALIDATOR_COUNT = 4;
+export const VALIDATOR_COUNT = 12;

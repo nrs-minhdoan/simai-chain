@@ -487,6 +487,20 @@ h2 {
   min-height: 0;
   padding: 0;
 }
+/* panel-body của panel--fill không còn padding (con tự lo, xem .blocks-scroll/.log) -
+   riêng trạng thái rỗng (<p class="empty">, không tự set padding vì dùng chung ở nhiều
+   nơi KHÔNG phải panel--fill) cần bù lại padding ngang thủ công ở đây. */
+.panel--fill .panel-body > .empty {
+  padding: 0 var(--panel-pad-x);
+}
+/* Panel không phải nội dung DUY NHẤT của cột (khác .col-center chỉ có 1 panel) - tự nở
+   chiếm khoảng trống còn lại của cột thay vì chỉ cao theo nội dung, để 3 cột (trái/giữa/
+   phải) thẳng hàng bằng nhau. Cần cột cha có chiều cao cố định mới có "khoảng trống" để
+   nở vào - xem style height ép lên .col-right ở App.tsx. */
+.panel--grow {
+  flex: 1;
+  min-height: 0;
+}
 
 /* ---- info tooltip: BẤM vào "?" để mở popover giải thích thuật ngữ cho người mới.
    Popover render qua Portal (position: fixed, toạ độ từ JS) NÊN không được đặt
@@ -755,25 +769,68 @@ h2 {
   letter-spacing: 0.1em;
   color: var(--dim);
 }
-.form-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
+/* Khoảng cách title "Smart contract (token)" -> thẻ đầu tiên bên dưới nó, bằng đúng
+   khoảng cách giữa các thẻ (.tx-card-stack gap: 10px) trong cùng section. */
+.form-group > .form-title {
+  display: block;
+  margin-bottom: 10px;
 }
-.form-row[data-disabled="true"] {
+/* Tách bạch form chuyển SAC (native coin) khỏi cụm form smart contract token bên dưới -
+   2 nhóm hành động khác hẳn nhau (chuyển tiền thường vs. gọi contract). */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--line-soft);
+  margin: 14px 0;
+}
+/* Mỗi hành động (chuyển SAC, deploy, mint, chuyển token) là 1 "thẻ" viền riêng - tách
+   bạch rõ ràng field nào thuộc hành động nào, thay vì các form-row rời rạc trước đây
+   trông như cùng 1 khối. */
+.tx-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  background: var(--ink-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+.tx-card[data-disabled="true"] {
   opacity: 0.45;
 }
-.form-row .mini {
-  font-size: 11px;
-  color: var(--muted);
-  width: 28px;
+.tx-card-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tx-card-stack .tx-card {
+  margin-top: 0;
+}
+.field-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+.field-grow {
+  flex: 1;
+  min-width: 160px;
 }
 .arrow {
   color: var(--dim);
 }
-select,
 input.amt {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -782,12 +839,88 @@ input.amt {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 6px 8px;
-}
-input.amt {
   width: 78px;
 }
-select {
+input.amt.symbol {
+  width: 64px;
+  text-transform: uppercase;
+}
+input.amt:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+input.memo {
+  flex: 1;
+  min-width: 160px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text);
+  background: #0a1220;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+/* ---- custom select: thay <select> gốc trình duyệt - vẽ theo design system (font-mono,
+   panel-2/violet/radius-sm...), portal + animation pop-in/pop-out giống InfoTip (xem
+   components/common/Select.tsx). ---- */
+.xselect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 66px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  background: #0a1220;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
   cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+.xselect:hover,
+.xselect[aria-expanded="true"] {
+  border-color: var(--violet);
+}
+.xselect-chevron {
+  color: var(--dim);
+  font-size: 9px;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.xselect-chevron.open {
+  transform: rotate(180deg);
+}
+.xselect-list {
+  position: fixed;
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--violet);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 24px -8px #000a;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  animation: pop-in var(--dur-med) var(--ease-out) forwards;
+}
+.xselect-list.closing {
+  animation: pop-out var(--dur-med) var(--ease-out) forwards;
+}
+.xselect-option {
+  padding: 6px 9px;
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.xselect-option:hover {
+  background: var(--line-soft);
+}
+.xselect-option.selected {
+  color: var(--violet);
+  font-weight: 600;
 }
 
 .mempool {
@@ -936,14 +1069,14 @@ select {
   flex: none;
   min-width: 32px;
   font-size: 12px;
-  color: var(--proposer);
+  color: var(--text);
 }
 .block-reward {
   flex: none;
   min-width: 56px;
   text-align: right;
   font-size: 11px;
-  color: var(--signal);
+  color: var(--text);
 }
 .chevron {
   display: inline-block;
@@ -1022,7 +1155,16 @@ select {
   animation-delay: 120ms;
 }
 .tx-note {
+  flex: none;
+}
+.tx-memo {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-style: italic;
 }
 .tx-val {
   color: var(--signal);
@@ -1061,6 +1203,11 @@ select {
   font-weight: 600;
   margin-right: 6px;
 }
+.token-supply {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
 .token-bal {
   list-style: none;
   margin: 0;
@@ -1082,20 +1229,17 @@ select {
   font-size: 11px;
   color: var(--muted);
 }
-/* margin-right âm để "tràn" ra tới mép panel thật (huỷ padding-right của .panel-body),
-   rồi padding-right riêng dựng lại khoảng cách với thanh cuộn - nhờ vậy scrollbar nằm
-   sát mép phải panel thay vì lửng lơ cách content 1 khoảng do padding chung. Dùng
-   var(--panel-pad-x) thay vì hardcode 16px - trước đây hardcode nên lúc panel-body đổi
-   padding ở breakpoint 640px (16px -> 12px) thì .log vẫn trừ/cộng theo 16px cũ, tràn
-   ra ngoài panel 4px và bị overflow:hidden cắt mất, làm nội dung trông hẹp hơn container. */
+/* Panel "Consensus log" là panel--fill/panel--grow (xem App.tsx) - panel-body đã zero
+   padding + flex:1 lấy đúng khoảng trống còn lại của cột, nên .log tự set padding riêng
+   (thay panel-body lo như trước) và cao 100% để dùng hết khoảng trống đó (nhiều hơn thì
+   tự cuộn), thay vì cố định max-height: 320px như cũ - luôn thấp hơn khoảng trống cột. */
 .log {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  max-height: 320px;
+  height: 100%;
   overflow: auto;
-  margin-right: calc(-1 * var(--panel-pad-x));
-  padding-right: var(--panel-pad-x);
+  padding: 14px var(--panel-pad-x);
   scrollbar-gutter: stable;
 }
 .log-line {
@@ -1145,13 +1289,13 @@ select {
   .panel-body {
     padding: 12px var(--panel-pad-x);
   }
-  .form-row {
+  .field-row {
     gap: 6px;
   }
   input.amt {
     width: 64px;
   }
-  select {
+  .xselect {
     padding: 6px;
   }
 }

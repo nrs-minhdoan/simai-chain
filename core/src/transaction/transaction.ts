@@ -34,6 +34,7 @@ export function txDigest(tx: Tx): Uint8Array {
     tx.gasLimit,
     encode(tx.dataArgs),
     encodeCode(tx.code),
+    tx.memo,
   ];
   return hash256(encode(body));
 }
@@ -48,6 +49,7 @@ export interface MakeTxParams {
   gasLimit?: bigint;
   dataArgs?: bigint[];
   code?: Program | null;
+  memo?: string;
 }
 
 export function makeTx(p: MakeTxParams): Tx {
@@ -60,6 +62,7 @@ export function makeTx(p: MakeTxParams): Tx {
     gasLimit: p.gasLimit ?? DEFAULT_GAS_LIMIT,
     dataArgs: p.dataArgs ?? [],
     code: p.code ?? null,
+    memo: p.memo ?? "",
     sig: null,
   };
   const digest = txDigest(tx);

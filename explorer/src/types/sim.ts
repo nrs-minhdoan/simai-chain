@@ -18,6 +18,8 @@ export interface TxView {
   hash: Hex;
   type: string;
   note: string;
+  /** Ghi chú/metadata tự do người gửi đính kèm (rỗng nếu không nhập) - xem Tx.memo. */
+  memo: string;
   value: string;
   nonce: string;
   gas: string;
@@ -93,6 +95,11 @@ export interface SimState {
   blocks: BlockView[];
   accounts: AccountView[];
   tokenAddr: Hex | null;
+  /** null = chưa deploy (hoặc deploy còn nằm trong mempool, chưa chốt) - khác chuỗi
+   *  rỗng/"0" (giá trị thật đã đọc được từ contract). */
+  tokenSymbol: string | null;
+  tokenMaxSupply: string | null;
+  tokenTotalSupply: string | null;
   tokenBalances: { label: string; balance: string }[];
   mempool: MempoolView[];
   lastRound: TelemetryView | null;

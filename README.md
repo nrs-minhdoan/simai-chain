@@ -102,13 +102,15 @@ Giao diện là một **bảng điều khiển đồng thuận**. Bạn đóng v
 
 1. **Soạn giao dịch** vào _Mempool_ - chuyển SAC giữa alice / bob / carol,
    deploy contract token, mint hoặc chuyển token.
-2. Chỉnh **hành vi validator** (V0–V3): _trung thực_, _bỏ phiếu rác_
-   (equivocate), hay _im lặng_ - để mô phỏng node Byzantine.
+2. Chỉnh **hành vi validator** (V0–V11, mặc định 12 validator - đổi số bằng
+   `VALIDATOR_COUNT` ở `explorer/src/constants/config.ts`): _trung thực_,
+   _bỏ phiếu rác_ (equivocate), hay _im lặng_ - để mô phỏng node Byzantine.
 3. Bấm **Chốt block**. Đồng hồ đồng thuận vẽ quá trình **pre-vote → pre-commit →
    commit** với vạch ngưỡng **> 2/3**; block mới nối vào chuỗi nếu đạt ngưỡng.
 
-Thử: cho **1/4** validator "bỏ phiếu rác" → vẫn chốt (3/4). Cho **2/4** "im lặng"
-→ **không chốt**, chain dừng an toàn (đúng tính chất BFT: an toàn khi lỗi < 1/3).
+Thử (với 12 validator mặc định): cho **3/12** validator "bỏ phiếu rác" → vẫn
+chốt (còn 9/12 hợp lệ, vừa đủ ngưỡng). Cho **6/12** "im lặng" → **không chốt**,
+chain dừng an toàn (đúng tính chất BFT: an toàn khi lỗi < 1/3).
 
 ## Mô hình bảo mật (Kerckhoffs)
 

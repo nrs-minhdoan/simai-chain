@@ -32,3 +32,7 @@ export const TX_FEE = parseFixed("0.1");
  *  processor (query()) và transaction (makeTx()) để tránh mỗi nơi hardcode 1 magic
  *  number khác nhau cho cùng 1 khái niệm. */
 export const DEFAULT_GAS_LIMIT = 100000n;
+
+/** Số ký tự tối đa cho phép ở Tx.memo (ghi chú/metadata tự do đính kèm giao dịch) -
+ *  chặn ở applyTx() (processor.ts) để tránh block phình to vô hạn vì memo dài tuỳ ý. */
+export const MEMO_MAX_LENGTH = 120;

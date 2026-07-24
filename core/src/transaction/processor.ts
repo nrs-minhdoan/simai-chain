@@ -6,7 +6,11 @@ import { hexToBytes } from "@noble/hashes/utils";
 import { verifyTx } from "./transaction";
 import { run } from "../vm/vm";
 import { hash256, toHex, fromHex } from "../crypto/crypto";
-import { DEFAULT_GAS_LIMIT, TX_FEE } from "../constants/config";
+import {
+  DEFAULT_GAS_LIMIT,
+  TX_FEE,
+  MEMO_MAX_LENGTH,
+} from "../constants/config";
 import type { WorldState } from "../state/state";
 import type { Tx, Hex } from "../types/types";
 
@@ -29,6 +33,9 @@ export function predictContractAddress(from: Hex, nonce: bigint): Hex {
 export function applyTx(state: WorldState, tx: Tx): ApplyResult {
   if (!verifyTx(tx))
     return { ok: false, error: "chữ ký không hợp lệ / tx bị sửa" };
+
+  if (tx.memo.length > MEMO_MAX_LENGTH)
+    return { ok: false, error: `memo vượt quá ${MEMO_MAX_LENGTH} ký tự` };
 
   const sender = state.get(tx.from);
   if (tx.nonce !== sender.nonce)
@@ -68,7 +75,7 @@ export function applyTx(state: WorldState, tx: Tx): ApplyResult {
     const result = run(tx.code, {
       caller: BigInt(tx.from),
       value: tx.value,
-      args: [],
+      args: tx.dataArgs,
       gasLimit: tx.gasLimit,
       storage: acct.storage,
       isConstructor: true,

@@ -8,7 +8,13 @@ import { applyTx, query } from "./src/transaction/processor";
 import { verifyCommit, short } from "./src/consensus/consensus";
 import { txRootOf, headerDigest } from "./src/block/block";
 import { parseFixed, formatFixed } from "./src/fixed-point/fixed-point";
-import { tokenCode, M_TRANSFER, M_BALANCEOF, M_MINT } from "./src/vm/token";
+import {
+  tokenCode,
+  packSymbol,
+  M_TRANSFER,
+  M_BALANCEOF,
+  M_MINT,
+} from "./src/vm/token";
 import { Chain } from "./src/chain/chain";
 import { NATIVE_SYMBOL } from "./src/constants/config";
 import type { Validator, Tx, Hex } from "./src/types/types";
@@ -101,6 +107,7 @@ const deploy = makeTx({
   priv: alice.priv,
   nonce: 1n,
   code: tokenCode,
+  dataArgs: [packSymbol("TOK"), parseFixed("1000000")], // symbol, trần tổng cung
 });
 chain.commit([deploy], { log: line });
 let tokenAddr: Hex = "0x";

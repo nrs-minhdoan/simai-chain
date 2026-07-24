@@ -21,9 +21,9 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true);
   const [autoMine, setAutoMine] = useState(false);
 
-  // "Chạy tự động": lặp lại đóng block liên tục, giống 4 validator đang hoạt động
-  // liên tục thay vì chỉ khi bạn tự bấm - không cần mở nhiều máy/tiến trình thật, cả 4
-  // validator (V0-V3) đã "bỏ phiếu" ngay trong 1 tiến trình mỗi vòng.
+  // "Chạy tự động": lặp lại đóng block liên tục, giống toàn bộ validator (V0..V{n-1},
+  // n = VALIDATOR_COUNT) đang hoạt động liên tục thay vì chỉ khi bạn tự bấm - không cần
+  // mở nhiều máy/tiến trình thật, tất cả đã "bỏ phiếu" ngay trong 1 tiến trình mỗi vòng.
   // QUAN TRỌNG: đây là vòng lặp TỰ CHỜ actions.mine() xong (bao gồm cả độ trễ đề xuất
   // PROPOSAL_DELAY_MS trong useChainSimulator.ts) rồi mới nghỉ AUTO_MINE_PAUSE_MS và lặp tiếp
   // - KHÔNG dùng setInterval cố định nữa, vì trước đây interval (2500ms) chạy độc lập
@@ -96,7 +96,7 @@ export default function App() {
           <button
             className={`btn ${autoMine ? "btn-primary" : "btn-ghost"}`}
             onClick={() => setAutoMine((v) => !v)}
-            title="Tự động đóng block mỗi vài giây, mô phỏng mạng chạy liên tục với 4 validator luôn bỏ phiếu"
+            title={`Tự động đóng block mỗi vài giây, mô phỏng mạng chạy liên tục với ${state.validators.length} validator luôn bỏ phiếu`}
           >
             {autoMine && <span className="live-dot" aria-hidden />}
             {autoMine ? "Đang chạy tự động" : "Chạy tự động"}
@@ -125,14 +125,14 @@ export default function App() {
         </button>
         <div className={`intro-body ${showIntro ? "open" : ""}`}>
           <p>
-            Hình dung 4 máy tính (<b>validator</b>) cùng giữ chung 1 cuốn sổ kế
-            toán không ai sửa được sau khi ghi - đó là <b>blockchain</b>. Mỗi
-            "trang sổ" là 1 <b>block</b>. Trước khi thêm trang mới, các
-            validator phải biểu quyết đồng ý (<b>đồng thuận</b>) - cần ít nhất
-            2/3 số phiếu, nên dù vài validator gian dối hoặc mất kết nối, cuốn
-            sổ vẫn đúng. Bấm <b>Đóng block</b> để tự đóng 1 lần, hoặc{" "}
-            <b>Chạy tự động</b> để xem cả 4 validator liên tục bỏ phiếu như 1
-            mạng thật đang chạy.
+            Hình dung {state.validators.length} máy tính (<b>validator</b>) cùng
+            giữ chung 1 cuốn sổ kế toán không ai sửa được sau khi ghi - đó là{" "}
+            <b>blockchain</b>. Mỗi "trang sổ" là 1 <b>block</b>. Trước khi thêm
+            trang mới, các validator phải biểu quyết đồng ý (<b>đồng thuận</b>)
+            - cần ít nhất 2/3 số phiếu, nên dù vài validator gian dối hoặc mất
+            kết nối, cuốn sổ vẫn đúng. Bấm <b>Đóng block</b> để tự đóng 1 lần,
+            hoặc <b>Chạy tự động</b> để xem cả {state.validators.length}{" "}
+            validator liên tục bỏ phiếu như 1 mạng thật đang chạy.
           </p>
         </div>
       </div>
@@ -197,7 +197,11 @@ export default function App() {
           </Panel>
         </div>
 
-        <div className="col col-right" ref={colRightRef}>
+        <div
+          className="col col-right"
+          ref={colRightRef}
+          style={centerMaxHeight ? { height: centerMaxHeight } : undefined}
+        >
           <Panel
             eyebrow="trạng thái"
             title="Tài khoản"
@@ -215,12 +219,19 @@ export default function App() {
             }
             help="Token ở đây là 1 smart contract mẫu - một đoạn chương trình tự chạy trên blockchain, đóng vai trò như 1 'ngân hàng mini' tự động quản lý số dư, không cần người vận hành ở giữa."
           >
-            <TokenBalances token={state.tokenBalances} />
+            <TokenBalances
+              token={state.tokenBalances}
+              symbol={state.tokenSymbol}
+              maxSupply={state.tokenMaxSupply}
+              totalSupply={state.tokenTotalSupply}
+            />
           </Panel>
           <Panel
             eyebrow="nhật ký"
             title="Consensus log"
             help="Nhật ký từng bước của quá trình đồng thuận (ai đề xuất block, kết quả bỏ phiếu...) - đọc để theo dõi 'hộp đen' đồng thuận đang làm gì ở mỗi lần đóng block."
+            fill
+            grow
           >
             <LogView log={state.log} />
           </Panel>

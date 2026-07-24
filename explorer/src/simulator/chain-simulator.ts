@@ -9,7 +9,18 @@ import { parseFixed, formatFixed } from "@core/fixed-point/fixed-point";
 import { makeTx } from "@core/transaction/transaction";
 import { query, predictContractAddress } from "@core/transaction/processor";
 import { short, blockReward } from "@core/consensus/consensus";
-import { tokenCode, M_MINT, M_TRANSFER, M_BALANCEOF } from "@core/vm/token";
+import {
+  tokenCode,
+  packSymbol,
+  unpackSymbol,
+  TOKEN_SYMBOL_MAX_LEN,
+  M_MINT,
+  M_TRANSFER,
+  M_BALANCEOF,
+  M_SYMBOL,
+  M_MAX_SUPPLY,
+  M_TOTAL_SUPPLY,
+} from "@core/vm/token";
 import type {
   Validator,
   Tx,
@@ -32,6 +43,7 @@ import type {
   SimState,
 } from "../types/sim";
 import { VALIDATOR_COUNT } from "../constants/config";
+import { MEMO_MAX_LENGTH } from "@core/constants/config";
 
 // Lưới pin ở UI giờ không cố định số ô - nó tự đo bề rộng và luôn hiển thị đủ 5 hàng
 // (xem ConsensusGauge.tsx), nên số này chỉ cần đủ LỚN để phủ cả màn hình rộng nhất
@@ -123,12 +135,24 @@ export class ChainSimulator {
     }
   }
 
+  /** Cắt bớt về đúng MEMO_MAX_LENGTH thay vì từ chối cả action - applyTx() (processor.ts)
+   *  vẫn là nơi CHỐT cuối cùng validate độ dài (đề phòng gọi thẳng script/test bỏ qua UI). */
+  private sanitizeMemo(memo: string): string {
+    return memo.trim().slice(0, MEMO_MAX_LENGTH);
+  }
+
   // --- actions -------------------------------------------------------------
-  addTransfer(fromLabel: UserLabel, toLabel: UserLabel, amount: string): void {
+  addTransfer(
+    fromLabel: UserLabel,
+    toLabel: UserLabel,
+    amount: string,
+    memo = "",
+  ): void {
     if (fromLabel === toLabel) return;
     const value = this.parseAmount(amount);
     if (value === null) return;
     const from = this.users[fromLabel];
+    const cleanMemo = this.sanitizeMemo(memo);
     const tx = makeTx({
       type: "transfer",
       from: from.address,
@@ -136,12 +160,19 @@ export class ChainSimulator {
       nonce: this.nextNonce(from.address),
       to: this.users[toLabel].address,
       value,
+      memo: cleanMemo,
     });
-    this.mempool.push({ tx, note: `${fromLabel} → ${toLabel}: ${amount}` });
+    const note = cleanMemo
+      ? `${fromLabel} → ${toLabel}: ${amount} ("${cleanMemo}")`
+      : `${fromLabel} → ${toLabel}: ${amount}`;
+    this.mempool.push({ tx, note });
   }
 
-  deployToken(): void {
+  deployToken(symbol: string, maxSupply: string): void {
     if (this.tokenAddr) return;
+    const cleanSymbol = symbol.trim().slice(0, TOKEN_SYMBOL_MAX_LEN);
+    const maxSupplyValue = this.parseAmount(maxSupply);
+    if (maxSupplyValue === null) return;
     const from = this.users.alice;
     const nonce = this.nextNonce(from.address);
     const tx = makeTx({
@@ -150,10 +181,14 @@ export class ChainSimulator {
       priv: from.priv,
       nonce,
       code: tokenCode,
+      dataArgs: [packSymbol(cleanSymbol), maxSupplyValue],
     });
     this.tokenAddr = predictContractAddress(from.address, nonce);
-    this.labels.set(this.tokenAddr, "Token");
-    this.mempool.push({ tx, note: "deploy Token (alice là owner)" });
+    this.labels.set(this.tokenAddr, cleanSymbol || "Token");
+    this.mempool.push({
+      tx,
+      note: `deploy ${cleanSymbol || "Token"} (trần ${maxSupply}, alice là owner)`,
+    });
   }
 
   mintToken(toLabel: UserLabel, amount: string): void {
@@ -241,7 +276,9 @@ export class ChainSimulator {
     for (const [addr, a] of this.chain.state.accounts) {
       if (a.code) {
         this.tokenAddr = addr;
-        this.labels.set(addr, "Token");
+        const symVal = query(this.chain.state, addr, [M_SYMBOL]);
+        const symbol = symVal !== null ? unpackSymbol(symVal) : "";
+        this.labels.set(addr, symbol || "Token");
       }
     }
   }
@@ -264,6 +301,7 @@ export class ChainSimulator {
       hash: tx.hash!,
       type: tx.type,
       note,
+      memo: tx.memo,
       value: formatFixed(tx.value),
       nonce: tx.nonce.toString(),
       gas: tx.gasLimit.toString(),
@@ -311,7 +349,7 @@ export class ChainSimulator {
   private roundHealthView(t: RoundTelemetry): RoundHealthView {
     // Nấc sáng = % quyền biểu quyết đã bầu cho block thật (prevotePower/totalPower),
     // quy về thang 4 nấc - không đếm đầu người, để đúng cả khi validator có power khác
-    // nhau (hiện tại 4 validator power bằng nhau nên trùng số, nhưng công thức đúng bản chất).
+    // nhau (hiện tại mọi validator power bằng nhau nên trùng số, nhưng công thức đúng bản chất).
     const pct =
       t.totalPower > 0n ? Number(t.prevotePower) / Number(t.totalPower) : 0;
     return {
@@ -367,6 +405,18 @@ export class ChainSimulator {
           return { label: k, balance: v === null ? "0" : formatFixed(v) };
         })
       : [];
+    // null trước khi block deploy được CHỐT (query() trên contract chưa có code trả về
+    // null) - khác "0" (giá trị thật đã đọc được) để UI phân biệt được "chưa có token"
+    // với "token có trần/tổng cung = 0".
+    const tokenSymbolVal = this.tokenAddr
+      ? query(this.chain.state, this.tokenAddr, [M_SYMBOL])
+      : null;
+    const tokenMaxSupplyVal = this.tokenAddr
+      ? query(this.chain.state, this.tokenAddr, [M_MAX_SUPPLY])
+      : null;
+    const tokenTotalSupplyVal = this.tokenAddr
+      ? query(this.chain.state, this.tokenAddr, [M_TOTAL_SUPPLY])
+      : null;
 
     return {
       height: this.chain.height,
@@ -382,6 +432,12 @@ export class ChainSimulator {
       blocks: this.chain.blocks.map((b) => this.blockView(b)).reverse(), // mới nhất lên đầu
       accounts,
       tokenAddr: this.tokenAddr,
+      tokenSymbol:
+        tokenSymbolVal !== null ? unpackSymbol(tokenSymbolVal) : null,
+      tokenMaxSupply:
+        tokenMaxSupplyVal !== null ? formatFixed(tokenMaxSupplyVal) : null,
+      tokenTotalSupply:
+        tokenTotalSupplyVal !== null ? formatFixed(tokenTotalSupplyVal) : null,
       tokenBalances,
       mempool: this.mempool.map((m) => ({ note: m.note, type: m.tx.type })),
       lastRound: this.lastTelemetry

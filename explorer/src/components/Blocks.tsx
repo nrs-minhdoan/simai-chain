@@ -20,6 +20,7 @@ function TxRow({ tx }: { tx: BlockView["txs"][number] }) {
         {tx.type}
       </Pill>
       <span className="tx-note">{tx.note}</span>
+      <span className="tx-memo">{tx.memo && `"${tx.memo}"`}</span>
       {tx.type !== "deploy" && tx.value !== "0" && (
         <span className="tx-val mono">{tx.value}</span>
       )}

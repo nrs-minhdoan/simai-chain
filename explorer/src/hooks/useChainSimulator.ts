@@ -4,8 +4,13 @@ import type { SimState, UserLabel } from "../types/sim";
 import type { ByzantineMode } from "@core/types/types";
 
 export interface Actions {
-  addTransfer: (from: UserLabel, to: UserLabel, amount: string) => void;
-  deployToken: () => void;
+  addTransfer: (
+    from: UserLabel,
+    to: UserLabel,
+    amount: string,
+    memo?: string,
+  ) => void;
+  deployToken: (symbol: string, maxSupply: string) => void;
   mintToken: (to: UserLabel, amount: string) => void;
   transferToken: (from: UserLabel, to: UserLabel, amount: string) => void;
   setByzantine: (name: string, mode: ByzantineMode) => void;
@@ -20,7 +25,7 @@ export interface Actions {
 // (gọi action rồi snapshot() ngay) - độ trễ không phải logic mô phỏng, chỉ là nhịp UI.
 // Không mô phỏng "độ khó" kiểu proof-of-work (chain này dùng BFT, không có mining) - chỉ
 // kéo dài thời gian xác thực/bỏ phiếu để thấy rõ giai đoạn đề xuất đang chạy.
-const PROPOSAL_DELAY_MS = 100000;
+const PROPOSAL_DELAY_MS = 10000;
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -36,8 +41,8 @@ export function useChainSimulator(): {
   const [state, setState] = useState<SimState>(() => sim.snapshot());
   const [pending, setPending] = useState(false);
   // Trong lúc pending, đếm dần 0 -> số validator để lộ dần từng validator "đã bỏ phiếu"
-  // (xem Validators.tsx) thay vì cả 4 hiện cùng lúc lúc kết quả về. Đây CHỈ là nhịp hiển
-  // thị, kết quả thật (valid/bogus/nil) vẫn tính 1 lần bởi sim.mineBlock() sau cùng.
+  // (xem Validators.tsx) thay vì hiện cả loạt cùng lúc lúc kết quả về. Đây CHỈ là nhịp
+  // hiển thị, kết quả thật (valid/bogus/nil) vẫn tính 1 lần bởi sim.mineBlock() sau cùng.
   const [votingCount, setVotingCount] = useState(0);
   const pendingRef = useRef(false);
   const refresh = useCallback(() => setState(sim.snapshot()), [sim]);
@@ -45,12 +50,12 @@ export function useChainSimulator(): {
 
   const actions = useMemo<Actions>(
     () => ({
-      addTransfer: (f, t, a) => {
-        sim.addTransfer(f, t, a);
+      addTransfer: (f, t, a, memo) => {
+        sim.addTransfer(f, t, a, memo);
         refresh();
       },
-      deployToken: () => {
-        sim.deployToken();
+      deployToken: (symbol, maxSupply) => {
+        sim.deployToken(symbol, maxSupply);
         refresh();
       },
       mintToken: (t, a) => {
@@ -75,7 +80,7 @@ export function useChainSimulator(): {
         setPending(true);
         setVotingCount(0);
         // Rải đều PROPOSAL_DELAY_MS thành từng bước, mỗi bước "lộ" thêm 1 validator đã
-        // bỏ phiếu (xem Validators.tsx) - thay vì im lặng suốt rồi hiện cả 4 cùng lúc.
+        // bỏ phiếu (xem Validators.tsx) - thay vì im lặng suốt rồi hiện cả loạt cùng lúc.
         const steps = Math.max(1, validatorCount);
         const stepMs = PROPOSAL_DELAY_MS / steps;
         for (let i = 1; i <= steps; i++) {
